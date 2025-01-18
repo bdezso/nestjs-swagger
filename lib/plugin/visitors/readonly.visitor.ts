@@ -28,7 +28,7 @@ export class ReadonlyVisitor {
     const factoryHost = { factory: ts.factory } as any;
     const parsedOptions: Record<string, any> = mergePluginOptions(this.options);
 
-    const outputModule = program.getCompilerOptions().module;
+    const outputModule = program.getCompilerOptions().module ?? ts.ModuleKind.CommonJS;
 
     if (isFilenameMatched(parsedOptions.dtoFileNameSuffix, sf.fileName)) {
       return this.modelClassVisitor.visit(

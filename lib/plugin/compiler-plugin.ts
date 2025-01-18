@@ -18,7 +18,7 @@ export const before = (options?: Record<string, any>, program?: ts.Program) => {
   }
 
 
-  const outputModule = program.getCompilerOptions().module;
+  const outputModule = program.getCompilerOptions().module ?? ts.ModuleKind.CommonJS;
 
   return (ctx: ts.TransformationContext): ts.Transformer<any> => {
     return (sf: ts.SourceFile) => {
