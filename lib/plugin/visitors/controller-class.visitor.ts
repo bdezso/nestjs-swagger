@@ -55,7 +55,8 @@ export class ControllerClassVisitor extends AbstractFileVisitor {
     sourceFile: ts.SourceFile,
     ctx: ts.TransformationContext,
     program: ts.Program,
-    options: PluginOptions
+    options: PluginOptions,
+    outputModuleKind: ts.ModuleKind
   ) {
     const typeChecker = program.getTypeChecker();
     if (!options.readonly) {
@@ -72,7 +73,8 @@ export class ControllerClassVisitor extends AbstractFileVisitor {
             typeChecker,
             options,
             sourceFile,
-            metadata
+            metadata,
+            outputModuleKind
           );
           if (!options.readonly) {
             return updatedNode;
@@ -121,7 +123,8 @@ export class ControllerClassVisitor extends AbstractFileVisitor {
     typeChecker: ts.TypeChecker,
     options: PluginOptions,
     sourceFile: ts.SourceFile,
-    metadata: ClassMetadata
+    metadata: ClassMetadata,
+    outputModuleKind: ts.ModuleKind
   ): ts.MethodDeclaration {
     const hostFilename = sourceFile.fileName;
     const decorators =
@@ -165,7 +168,8 @@ export class ControllerClassVisitor extends AbstractFileVisitor {
       factory.createNodeArray(),
       hostFilename,
       metadata,
-      options
+      options,
+      outputModuleKind
     );
     const updatedDecorators = [
       ...apiOperationDecoratorsArray,
@@ -389,7 +393,8 @@ export class ControllerClassVisitor extends AbstractFileVisitor {
     existingProperties: ts.NodeArray<ts.PropertyAssignment> = factory.createNodeArray(),
     hostFilename: string,
     metadata: ClassMetadata,
-    options: PluginOptions
+    options: PluginOptions,
+    outputModuleKind: ts.ModuleKind
   ): ts.ObjectLiteralExpression {
     let properties = [];
 
@@ -407,7 +412,8 @@ export class ControllerClassVisitor extends AbstractFileVisitor {
         typeChecker,
         existingProperties,
         hostFilename,
-        options
+        options,
+        outputModuleKind
       )
     ]);
     const objectLiteralExpr = factory.createObjectLiteralExpression(
@@ -437,7 +443,8 @@ export class ControllerClassVisitor extends AbstractFileVisitor {
     typeChecker: ts.TypeChecker,
     existingProperties: ts.NodeArray<ts.PropertyAssignment>,
     hostFilename: string,
-    options: PluginOptions
+    options: PluginOptions,
+    outputModuleKind: ts.ModuleKind
   ) {
     if (hasPropertyKey('type', existingProperties)) {
       return undefined;
@@ -460,7 +467,8 @@ export class ControllerClassVisitor extends AbstractFileVisitor {
       options,
       factory,
       type,
-      this._typeImports
+      this._typeImports,
+      outputModuleKind
     );
     return factory.createPropertyAssignment('type', identifier);
   }

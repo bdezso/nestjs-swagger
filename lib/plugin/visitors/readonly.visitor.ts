@@ -28,12 +28,15 @@ export class ReadonlyVisitor {
     const factoryHost = { factory: ts.factory } as any;
     const parsedOptions: Record<string, any> = mergePluginOptions(this.options);
 
+    const outputModule = program.getCompilerOptions().module;
+
     if (isFilenameMatched(parsedOptions.dtoFileNameSuffix, sf.fileName)) {
       return this.modelClassVisitor.visit(
         sf,
         factoryHost,
         program,
-        parsedOptions
+        parsedOptions,
+        outputModule
       );
     }
     if (
@@ -43,7 +46,8 @@ export class ReadonlyVisitor {
         sf,
         factoryHost,
         program,
-        parsedOptions
+        parsedOptions,
+        outputModule
       );
     }
   }

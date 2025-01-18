@@ -17,6 +17,7 @@ export interface PluginOptions {
    * Skip auto-annotating controller methods with HTTP status codes (e.g., @HttpCode(201))
    */
   skipAutoHttpCode?: boolean;
+  commonJsOutput?: boolean
 }
 
 const defaultOptions: PluginOptions = {

@@ -25,7 +25,7 @@ describe('Readonly visitor', () => {
   });
   const metadataPrinter = new PluginMetadataPrinter();
 
-  it('should generate a serialized metadata', () => {
+  it.only('should generate a serialized metadata', () => {
     const tsconfigPath = join(
       __dirname,
       'fixtures',

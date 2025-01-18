@@ -140,8 +140,12 @@ export function hasPropertyKey(
 export function replaceImportPath(
   typeReference: string,
   fileName: string,
-  options: PluginOptions
+  options: PluginOptions,
+  outputModuleKind: ts.ModuleKind
 ) {
+  const isCommonJS = outputModuleKind <= ts.ModuleKind.CommonJS;
+
+
   if (!typeReference.includes('import')) {
     return { typeReference, importPath: null };
   }
@@ -157,7 +161,9 @@ export function replaceImportPath(
       throw {};
     }
     require.resolve(importPath);
-    typeReference = typeReference.replace('import', 'require');
+    if(isCommonJS){
+      typeReference = typeReference.replace('import', 'require');
+    }
     return {
       typeReference,
       importPath: null
@@ -192,7 +198,9 @@ export function replaceImportPath(
       }
     }
 
+
     typeReference = typeReference.replace(importPath, relativePath);
+
 
     if (options.readonly) {
       const { typeName, typeImportStatement } =
@@ -204,7 +212,7 @@ export function replaceImportPath(
       };
     }
     return {
-      typeReference: typeReference.replace('import', 'require'),
+      typeReference: isCommonJS ? typeReference.replace('import', 'require') : typeReference,
       importPath: relativePath
     };
   }

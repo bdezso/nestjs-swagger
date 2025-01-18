@@ -17,13 +17,16 @@ export const before = (options?: Record<string, any>, program?: ts.Program) => {
     throw new Error(error);
   }
 
+
+  const outputModule = program.getCompilerOptions().module;
+
   return (ctx: ts.TransformationContext): ts.Transformer<any> => {
     return (sf: ts.SourceFile) => {
       if (isFilenameMatched(options.dtoFileNameSuffix, sf.fileName)) {
-        return modelClassVisitor.visit(sf, ctx, program, options);
+        return modelClassVisitor.visit(sf, ctx, program, options,outputModule);
       }
       if (isFilenameMatched(options.controllerFileNameSuffix, sf.fileName)) {
-        return controllerClassVisitor.visit(sf, ctx, program, options);
+        return controllerClassVisitor.visit(sf, ctx, program, options,outputModule);
       }
       return sf;
     };

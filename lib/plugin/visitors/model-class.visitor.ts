@@ -64,10 +64,12 @@ export class ModelClassVisitor extends AbstractFileVisitor {
     sourceFile: ts.SourceFile,
     ctx: ts.TransformationContext,
     program: ts.Program,
-    options: PluginOptions
+    options: PluginOptions,
+    outputModuleKind: ts.ModuleKind
   ) {
     const typeChecker = program.getTypeChecker();
     sourceFile = this.updateImports(sourceFile, ctx.factory, program);
+
 
     const propertyNodeVisitorFactory =
       (metadata: ClassMetadata) =>
@@ -80,7 +82,8 @@ export class ModelClassVisitor extends AbstractFileVisitor {
               typeChecker,
               options,
               sourceFile,
-              metadata
+              metadata,
+              outputModuleKind
             );
           } else if (
             options.parameterProperties &&
@@ -91,7 +94,8 @@ export class ModelClassVisitor extends AbstractFileVisitor {
               typeChecker,
               options,
               sourceFile,
-              metadata
+              metadata,
+              outputModuleKind
             );
           }
           return node;
@@ -133,7 +137,8 @@ export class ModelClassVisitor extends AbstractFileVisitor {
             node as ts.ClassDeclaration,
             metadata,
             sourceFile,
-            options
+            options,
+            outputModuleKind
           );
 
           if (!options.readonly) {
@@ -157,7 +162,8 @@ export class ModelClassVisitor extends AbstractFileVisitor {
     typeChecker: ts.TypeChecker,
     options: PluginOptions,
     sourceFile: ts.SourceFile,
-    metadata: ClassMetadata
+    metadata: ClassMetadata,
+    outputModuleKind: ts.ModuleKind
   ) {
     const isPropertyStatic = (node.modifiers || []).some(
       (modifier: ts.ModifierLike) => modifier.kind === ts.SyntaxKind.StaticKeyword
@@ -204,7 +210,8 @@ export class ModelClassVisitor extends AbstractFileVisitor {
         options,
         sourceFile.fileName,
         sourceFile,
-        metadata
+        metadata,
+        outputModuleKind
       );
     } catch (err) {
       return node;
@@ -216,7 +223,8 @@ export class ModelClassVisitor extends AbstractFileVisitor {
     typeChecker: ts.TypeChecker,
     options: PluginOptions,
     sourceFile: ts.SourceFile,
-    metadata: ClassMetadata
+    metadata: ClassMetadata,
+    outputModuleKind: ts.ModuleKind
   ) {
     constructorNode.forEachChild((node) => {
       if (
@@ -234,6 +242,7 @@ export class ModelClassVisitor extends AbstractFileVisitor {
           factory,
           node,
           typeChecker,
+          outputModuleKind,
           factory.createNodeArray(),
           options,
           sourceFile.fileName,
@@ -251,7 +260,8 @@ export class ModelClassVisitor extends AbstractFileVisitor {
     node: ts.ClassDeclaration,
     classMetadata: ClassMetadata,
     sourceFile: ts.SourceFile,
-    options: PluginOptions
+    options: PluginOptions,
+    outputModuleKind: ts.ModuleKind
   ) {
     const returnValue = factory.createObjectLiteralExpression(
       Object.keys(classMetadata).map((key) =>
@@ -303,12 +313,14 @@ export class ModelClassVisitor extends AbstractFileVisitor {
     options: PluginOptions,
     hostFilename: string,
     sourceFile: ts.SourceFile,
-    metadata: ClassMetadata
+    metadata: ClassMetadata,
+    outputModuleKind: ts.ModuleKind
   ) {
     const objectLiteralExpr = this.createDecoratorObjectLiteralExpr(
       factory,
       compilerNode,
       typeChecker,
+      outputModuleKind,
       factory.createNodeArray(),
       options,
       hostFilename,
@@ -329,10 +341,11 @@ export class ModelClassVisitor extends AbstractFileVisitor {
       | ts.PropertySignature
       | ts.ParameterDeclaration,
     typeChecker: ts.TypeChecker,
+    outputModuleKind: ts.ModuleKind,
     existingProperties: ts.NodeArray<ts.PropertyAssignment> = factory.createNodeArray(),
     options: PluginOptions = {},
     hostFilename = '',
-    sourceFile?: ts.SourceFile
+    sourceFile?: ts.SourceFile,
   ): ts.ObjectLiteralExpression {
     const isRequired = !node.questionToken;
 
@@ -349,7 +362,8 @@ export class ModelClassVisitor extends AbstractFileVisitor {
         typeChecker,
         existingProperties,
         hostFilename,
-        options
+        options,
+        outputModuleKind
       ),
       ...this.createDescriptionAndTsDocTagPropertyAssignments(
         factory,
@@ -371,7 +385,8 @@ export class ModelClassVisitor extends AbstractFileVisitor {
         typeChecker,
         existingProperties,
         hostFilename,
-        options
+        options,
+        outputModuleKind
       )
     ];
     if (
@@ -396,7 +411,8 @@ export class ModelClassVisitor extends AbstractFileVisitor {
     typeChecker: ts.TypeChecker,
     existingProperties: ts.NodeArray<ts.PropertyAssignment>,
     hostFilename: string,
-    options: PluginOptions
+    options: PluginOptions,
+    outputModuleKind: ts.ModuleKind
   ): ts.PropertyAssignment[] {
     const key = 'type';
     if (hasPropertyKey(key, existingProperties)) {
@@ -411,7 +427,8 @@ export class ModelClassVisitor extends AbstractFileVisitor {
           typeChecker,
           existingProperties,
           hostFilename,
-          options
+          options,
+          outputModuleKind
         );
         return [factory.createPropertyAssignment(key, initializer)];
       } else if (ts.isUnionTypeNode(node)) {
@@ -428,7 +445,8 @@ export class ModelClassVisitor extends AbstractFileVisitor {
             typeChecker,
             existingProperties,
             hostFilename,
-            options
+            options,
+            outputModuleKind
           );
           if (!isNullable) {
             return propertyAssignments;
@@ -460,7 +478,8 @@ export class ModelClassVisitor extends AbstractFileVisitor {
       options,
       factory,
       type,
-      this._typeImports
+      this._typeImports,
+      outputModuleKind
     );
 
     const initializer = factory.createArrowFunction(
@@ -480,13 +499,15 @@ export class ModelClassVisitor extends AbstractFileVisitor {
     typeChecker: ts.TypeChecker,
     existingProperties: ts.NodeArray<ts.PropertyAssignment>,
     hostFilename: string,
-    options: PluginOptions
+    options: PluginOptions,
+    outputModuleKind: ts.ModuleKind
   ) {
     const propertyAssignments = Array.from(node.members || []).map((member) => {
       const literalExpr = this.createDecoratorObjectLiteralExpr(
         factory,
         member as ts.PropertySignature,
         typeChecker,
+        outputModuleKind,
         existingProperties,
         options,
         hostFilename
@@ -528,7 +549,8 @@ export class ModelClassVisitor extends AbstractFileVisitor {
     typeChecker: ts.TypeChecker,
     existingProperties: ts.NodeArray<ts.PropertyAssignment>,
     hostFilename: string,
-    options: PluginOptions
+    options: PluginOptions,
+    outputModuleKind: ts.ModuleKind
   ) {
     const key = 'enum';
     if (hasPropertyKey(key, existingProperties)) {
@@ -572,7 +594,8 @@ export class ModelClassVisitor extends AbstractFileVisitor {
       options,
       factory,
       type,
-      this._typeImports
+      this._typeImports,
+      outputModuleKind
     );
 
     const enumProperty = factory.createPropertyAssignment(key, enumIdentifier);
